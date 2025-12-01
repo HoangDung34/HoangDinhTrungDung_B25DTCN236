@@ -77,7 +77,7 @@ double inputBalance(double oldBalance) {
             return oldBalance; 
         }
 
-        if (sscanf(input, "%lf", &value) != 1) { //sscanf(input, "%lf", &value) chuyen chuoi input thành so thuc (double).,doc tu chuoi
+        if (sscanf(input, "%lf", &value) != 1) { 
             printf("Gia tri khong hop le! Vui long nhap lai.\n");
             continue;
         }
@@ -152,7 +152,7 @@ void create_new_account(struct Account accounts[], int i){
 }
 
     
-    accounts[i].balance = 0.0;
+    accounts[i].balance = 100.000;
     accounts[i].status  = 1;
     
     printf("Tao tai khoan thanh cong!!!\n");
@@ -273,6 +273,7 @@ void lock_unlock_account(struct Account accounts[], int size){
         if (found == -1) {
             printf("Khong tim thay tai khoan! Vui long nhap lai.\n");
         } else {
+        	strcpy(accounts[found].accountId, searchId);
             break; 
         }
     }
@@ -318,52 +319,54 @@ void search_account(struct Account accounts[], int size) {
     char keyword[50];
 
     while (1) {
-        printf("Nhap tu khoa tim kiem (ID hoac Ten): ");
-        fgets(keyword, sizeof(keyword), stdin);
-        keyword[strcspn(keyword, "\n")] = '\0'; 
+        while (1) {
+            printf("Nhap tu khoa tim kiem (ID hoac Ten): ");
+            fgets(keyword, sizeof(keyword), stdin);
+            keyword[strcspn(keyword, "\n")] = '\0';
 
-        if (strlen(keyword) == 0) {
-            printf("Tu khoa khong duoc de trong, vui long nhap lai!\n");
-            continue;
+            if (strlen(keyword) == 0) {
+                printf("Tu khoa khong duoc de trong, vui long nhap lai!\n");
+                continue;
+            }
+            break;
         }
-        break;
-    }
 
-    char lowerKeyword[50];
-    strcpy(lowerKeyword, keyword);
-    strToLower(lowerKeyword);
+        char lowerKeyword[50];
+        strcpy(lowerKeyword, keyword);
+        strToLower(lowerKeyword);
 
-    printf("\n=== Ket qua tim kiem ===\n");
+        printf("\n=== Ket qua tim kiem ===\n");
 
-    int found = 0;
+        int found = 0;
+        for (int i = 0; i < size; i++) {
+            char lowerName[50], lowerId[20];
 
-    for (int i = 0; i < size; i++) {
-        char lowerName[50], lowerId[20];
+            strcpy(lowerName, accounts[i].fullName);
+            strToLower(lowerName);
 
-        strcpy(lowerName, accounts[i].fullName);
-        strToLower(lowerName);
+            strcpy(lowerId, accounts[i].accountId);
+            strToLower(lowerId);
 
-        strcpy(lowerId, accounts[i].accountId);
-        strToLower(lowerId);
+            if (strstr(lowerId, lowerKeyword) != NULL || strstr(lowerName, lowerKeyword) != NULL) {
+                printf("ID: %-5s | Ten: %-20s | Phone: %-15s | Balance: %-10.3f | Status: %-10s\n",
+                    accounts[i].accountId,
+                    accounts[i].fullName,
+                    accounts[i].phone,
+                    accounts[i].balance,
+                    accounts[i].status ? "dang hoat dong" : "dang khoa");
 
-        if (strstr(lowerId, lowerKeyword) != NULL ||
-            strstr(lowerName, lowerKeyword) != NULL) {
-
-            printf("ID: %-5s | Ten: %-20s | Phone: %-15s | Balance: %-10.3f | Status: %-10s\n",
-                   accounts[i].accountId,
-                   accounts[i].fullName,
-                   accounts[i].phone,
-                   accounts[i].balance,
-                   accounts[i].status ? "dang hoat dong" : "dang khoa");
-
-            found = 1;
+                found = 1;
+            }
         }
-    }
 
-    if (!found) {
-        printf("Khong co ket qua phu hop!\n");
+        if (found) {
+            break;
+        }
+
+        printf("Khong co ket qua phu hop! Vui long nhap lai tu khoa!\n\n");
     }
 }
+
 
 void list_accounts_pagination(struct Account accounts[], int size) {
     if (size == 0) {
@@ -410,27 +413,23 @@ void list_accounts_pagination(struct Account accounts[], int size) {
                 current_page++;
             else
                 printf("Ban dang o trang cuoi!\n");
-        }
-        else if (choice == 'D' || choice == 'd') {
+        }else if (choice == 'D' || choice == 'd') {
             if (current_page > 1)
                 current_page--;
             else
                 printf("Ban dang o trang dau!\n");
-        }
-        else if (choice == 'G' || choice == 'g') {
+        }else if (choice == 'G' || choice == 'g') {
             int go;
             printf("Nhap so trang muon den: ");
             scanf("%d", &go);
             if (go >= 1 && go <= total_pages)
                 current_page = go;
             else
-                printf("So trang khong hop le!\n");
-        }
-        else if (choice == 'E' || choice == 'e') {
+                printf("So trang khong hop !\n");
+        }else if (choice == 'E' || choice == 'e') {
             printf("Thoat phan trang...\n");
             break;
-        }
-        else {
+        }else {
             printf("Lua chon khong hop le!\n");
         }
     }
@@ -503,8 +502,7 @@ void sort_accounts(struct Account accounts[], int size){
     list_accounts_pagination(accounts, size);
 }
 
-int transfer_money(struct Account accounts[], int accountCount, 
-                   struct Transaction transactions[], int tranCount) {
+int transfer_money(struct Account accounts[], int accountCount, struct Transaction transactions[], int tranCount) {
 
     char senderId[20], receiverId[20];
     double amount;
@@ -651,13 +649,12 @@ int transfer_money(struct Account accounts[], int accountCount,
     accounts[receiverIndex].balance += amount;
 
     snprintf(transactions[tranCount].tranId, sizeof(transactions[tranCount].tranId),
-             "TR%03d", tranCount + 1);
+             "TRAN%03d", tranCount + 1);
 
     strcpy(transactions[tranCount].senderId, senderId);
     strcpy(transactions[tranCount].receiverId, receiverId);
     transactions[tranCount].amount = amount;
     strcpy(transactions[tranCount].type, "Transfer");
-    strcpy(transactions[tranCount].date, "2025-11-30");
 
     printf("Giao dich thanh cong!\n");
 
@@ -665,30 +662,35 @@ int transfer_money(struct Account accounts[], int accountCount,
 }
 
 
-void view_transaction_history(struct Account accounts[], int accountCount,struct Transaction transactions[], int tranCount) {
+void view_transaction_history(struct Account accounts[], int accountCount, struct Transaction transactions[], int tranCount) {
     char targetId[20];
     int exist = 0;
 
-    printf("Nhap ID tai khoan can xem lich su: ");
-    fgets(targetId, sizeof(targetId), stdin);
-    targetId[strcspn(targetId, "\n")] = 0;
-    space(targetId);
+    while(1) {
+        printf("Nhap ID tai khoan can xem lich su: ");
+        fgets(targetId, sizeof(targetId), stdin);
+        targetId[strcspn(targetId, "\n")] = 0;
+        space(targetId);
 
-    if(strlen(targetId) == 0) {
-        printf("Loi: ID khong duoc de trong!\n");
-        return;
-    }
-
-    for(int i = 0; i < accountCount; i++) {
-        if(strcmp(accounts[i].accountId, targetId) == 0) {
-            exist = 1;
-            break;
+        if(strlen(targetId) == 0) {
+            printf("Loi: ID khong duoc de trong, vui long nhap lai!\n");
+            continue;
         }
-    }
 
-    if(!exist) {
-        printf("Loi: Tai khoan khong ton tai!\n");
-        return;
+        exist = 0;
+        for(int i = 0; i < accountCount; i++) {
+            if(strcmp(accounts[i].accountId, targetId) == 0) {
+                exist = 1;
+                break;
+            }
+        }
+
+        if(!exist) {
+            printf("Loi: Tai khoan khong ton tai, vui long nhap lai!\n");
+            continue;
+        }
+
+        break;  
     }
 
     if(tranCount == 0) {
@@ -705,16 +707,16 @@ void view_transaction_history(struct Account accounts[], int accountCount,struct
 
     for(int i = 0; i < tranCount; i++) {
 
-        int isSender = strcmp(transactions[i].senderId, targetId) == 0;
+        int isSender   = strcmp(transactions[i].senderId, targetId) == 0;
         int isReceiver = strcmp(transactions[i].receiverId, targetId) == 0;
 
         if(isSender || isReceiver) {
             found = 1;
 
             char direction[10];
-            if(isSender)
-                strcpy(direction, "Gui");
-            else
+            if(isSender) 
+                strcpy(direction, "Gui"); 
+            else 
                 strcpy(direction, "Nhan");
 
             printf("%-10s | %-10s | %-10s | %-10s | %-10.3f\n",
@@ -737,10 +739,10 @@ void view_transaction_history(struct Account accounts[], int accountCount,struct
 int main(){    
     struct Account accounts[MAX_ACCOUNTS];
     struct Transaction transactions[MAX_TRANSACTIONS];
-    int accountCount = 0; //bien dem tai khoan hien co
+    int accountCount = 0; 
     int tranCount = 0;
     int choice;
-    char input[10]; // mang char luu chuoi nhap vao ban phim . Dung fgets thay vi scanf de tranh tran bo nho va xu ly chuoi rong
+    char input[10];
     
     do{
         printf("==========Mini Banking System=========\n");
